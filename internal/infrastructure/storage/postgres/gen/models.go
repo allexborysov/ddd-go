@@ -24,10 +24,9 @@ type Flight struct {
 }
 
 type FlightSeat struct {
-	FlightID    string      `db:"flight_id" json:"flight_id"`
-	SeatNumber  string      `db:"seat_number" json:"seat_number"`
-	Price       float64     `db:"price" json:"price"`
-	PassengerID pgtype.Text `db:"passenger_id" json:"passenger_id"`
+	FlightID   string  `db:"flight_id" json:"flight_id"`
+	SeatNumber string  `db:"seat_number" json:"seat_number"`
+	Price      float64 `db:"price" json:"price"`
 }
 
 type Ticket struct {

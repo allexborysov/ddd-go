@@ -45,16 +45,25 @@ func (r *flightRepository) Store(ctx context.Context, f *flight.Flight) error {
 
 	for sn, sa := range f.Seats {
 		if err := qtx.UpsertFlightSeat(ctx, db.UpsertFlightSeatParams{
-			FlightID:    string(f.ID),
-			SeatNumber:  string(sn),
-			Price:       float64(sa.Price),
-			PassengerID: toNullableText(string(sa.PassengerID)),
+			FlightID:   string(f.ID),
+			SeatNumber: string(sn),
+			Price:      float64(sa.Price),
 		}); err != nil {
 			return err
 		}
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *flightRepository) StoreTicket(ctx context.Context, t *flight.Ticket) error {
+	return r.queries.UpsertTicket(ctx, db.UpsertTicketParams{
+		ID:          string(t.ID),
+		FlightID:    string(t.FlightID),
+		PassengerID: string(t.PassengerID),
+		Seat:        string(t.Seat),
+		Price:       float64(t.Price),
+	})
 }
 
 func (r *flightRepository) Find(ctx context.Context, id string) (*flight.Flight, error) {

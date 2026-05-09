@@ -35,20 +35,25 @@ type SeatAssignment struct {
 type FlightRepository interface {
 	Store(ctx context.Context, fl *Flight) error
 	Find(ctx context.Context, id string) (*Flight, error)
+	StoreTicket(ctx context.Context, t *Ticket) error
 }
 
 var (
 	ErrSeatBooked    = errors.New("Seat is already booked")
+	ErrSeatNotFound  = errors.New("Seat does not exist on this flight")
 	ErrBookingClosed = errors.New("Booking is closed")
 )
 
-func (f *Flight) AssignSeat(passengerId PassengerID, seatNumber inventory.SeatNumber) (*Ticket, error) {
+func (f *Flight) IssueTicket(passengerId PassengerID, seatNumber inventory.SeatNumber) (*Ticket, error) {
 	untilDeparture := time.Until(f.ScheduledDeparture)
 	if untilDeparture < f.CloseBookingBuffer {
 		return nil, ErrBookingClosed
 	}
 
-	seat := f.Seats[seatNumber]
+	seat, ok := f.Seats[seatNumber]
+	if !ok {
+		return nil, ErrSeatNotFound
+	}
 	if seat.PassengerID != "" {
 		return nil, ErrSeatBooked
 	}

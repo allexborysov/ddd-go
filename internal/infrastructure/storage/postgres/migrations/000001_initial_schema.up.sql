@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS flight_seats (
     flight_id TEXT NOT NULL REFERENCES flights(id),
     seat_number TEXT NOT NULL,
     price DOUBLE PRECISION NOT NULL,
-    passenger_id TEXT,
     PRIMARY KEY (flight_id, seat_number)
 );
 

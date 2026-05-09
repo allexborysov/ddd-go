@@ -1,33 +1,43 @@
-# Root-level variables
 config := "env.yaml"
 
-# List all available commands
 default:
     @just --list
 
+# ── Development ──────────────────────────────────────────────────────────────
+
 # Run in watch mode
 run:
-    CONFIG_PATH={{config}} wgo run cmd/api/main.go
+    CONFIG_PATH={{config}} wgo run ./cmd/api
 
-# Run in watch mode with -race
+# Run in watch mode with race detection
 run-race:
-    CONFIG_PATH={{config}} wgo run -race cmd/api/main.go
+    CONFIG_PATH={{config}} wgo run -race ./cmd/api
 
-# Build
+# Run with test config
+run-test:
+    CONFIG_PATH=env.test.yaml go run -race ./cmd/api
+
+# Build binary
 build:
-    CONFIG_PATH={{config}} go build -o dist/api cmd/api/main.go
+    go build -o dist/api ./cmd/api
 
 # Start built binary
 start:
     CONFIG_PATH={{config}} ./dist/api
 
-# Run all tests
-test:
-    go test -v ./...
 
-# Run tests with race detection
-test-race:
-    go test -v -race ./...
+# ── Testing ───────────────────────────────────────────────────────────────────
+
+# Run unit tests with race detection
+test:
+    go run gotest.tools/gotestsum --format testdox -- -race ./internal/... ./cmd/... ./config/...
+
+# Run e2e tests against a running API (start it with `just run-test` in another shell)
+e2e base_url="http://127.0.0.1:8080":
+    E2E_BASE_URL={{base_url}} go run gotest.tools/gotestsum --format testdox -- -race ./e2e/...
+
+
+# ── Linting ───────────────────────────────────────────────────────────────────
 
 # Format all Go code
 fmt:
@@ -38,19 +48,14 @@ fix:
     go fix ./...
 
 
-# --- Postgres sqlc ---
+# ── Postgres / sqlc ───────────────────────────────────────────────────────────
 
-# Generate sqlc code from queries
+# Generate sqlc code from SQL queries
 sqlc-gen:
     sqlc generate -f internal/infrastructure/storage/postgres/sqlc.yaml
 
-# Run database migrations (requires DATABASE_URL env var or -database-url flag)
-# Commands:
-#   up              - apply all pending migrations (default)
-#   down            - rollback all migrations
-#   down steps=N    - rollback N migrations
-#   up   steps=N    - apply N migrations
-#   version         - print current migration version and dirty state
-#   force version=N - force-set version without running SQL (recover from dirty state)
-migrate command="version" steps="-1":
+# Run database migrations
+# Commands: up (default), down, version, force
+# Options:  steps=N (number of steps), version=N (for force)
+migrate command="up" steps="-1":
     go run cmd/migrate/main.go -command={{command}} -steps={{steps}}

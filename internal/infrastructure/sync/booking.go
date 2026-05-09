@@ -21,16 +21,16 @@ func New(client *redisv9.Client) *BookingMutex {
 	}
 }
 
-func (m *BookingMutex) Lock(ctx context.Context, seatNumber string) bool {
-	key := m.prefix + seatNumber
-	locked, err := m.redisClient.SetNX(ctx, key, "", m.ttl).Result()
+func (m *BookingMutex) Lock(ctx context.Context, key string) bool {
+	rKey := m.prefix + key
+	locked, err := m.redisClient.SetNX(ctx, rKey, "", m.ttl).Result()
 	if err != nil {
 		return false
 	}
 	return locked
 }
 
-func (m *BookingMutex) Unlock(ctx context.Context, seatNumber string) {
-	key := m.prefix + seatNumber
-	m.redisClient.Del(ctx, key)
+func (m *BookingMutex) Unlock(ctx context.Context, key string) {
+	rKey := m.prefix + key
+	m.redisClient.Del(ctx, rKey)
 }

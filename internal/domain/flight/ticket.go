@@ -1,8 +1,6 @@
 package flight
 
 import (
-	"context"
-
 	shared "github.com/allexborysov/aircraft"
 	"github.com/allexborysov/aircraft/internal/domain/inventory"
 	"github.com/pborman/uuid"
@@ -27,11 +25,6 @@ func NewTicket(flightID FlightID, passengerID PassengerID, seatNumber inventory.
 		Seat:        seatNumber,
 		Price:       price,
 	}
-}
-
-type TicketRepository interface {
-	Store(ctx context.Context, t *Ticket) error
-	Find(ctx context.Context, id string) (*Ticket, error)
 }
 
 type TicketPDFPresenter interface {

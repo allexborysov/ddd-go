@@ -12,21 +12,29 @@ import (
 )
 
 const getFlightSeatsByFlightID = `-- name: GetFlightSeatsByFlightID :many
-SELECT flight_id, seat_number, price, passenger_id
-FROM flight_seats
-WHERE flight_id = $1
-ORDER BY seat_number
+SELECT fs.flight_id, fs.seat_number, fs.price, t.passenger_id
+FROM flight_seats fs
+LEFT JOIN tickets t ON t.flight_id = fs.flight_id AND t.seat = fs.seat_number
+WHERE fs.flight_id = $1
+ORDER BY fs.seat_number
 `
 
-func (q *Queries) GetFlightSeatsByFlightID(ctx context.Context, flightID string) ([]FlightSeat, error) {
+type GetFlightSeatsByFlightIDRow struct {
+	FlightID    string      `db:"flight_id" json:"flight_id"`
+	SeatNumber  string      `db:"seat_number" json:"seat_number"`
+	Price       float64     `db:"price" json:"price"`
+	PassengerID pgtype.Text `db:"passenger_id" json:"passenger_id"`
+}
+
+func (q *Queries) GetFlightSeatsByFlightID(ctx context.Context, flightID string) ([]GetFlightSeatsByFlightIDRow, error) {
 	rows, err := q.db.Query(ctx, getFlightSeatsByFlightID, flightID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []FlightSeat{}
+	items := []GetFlightSeatsByFlightIDRow{}
 	for rows.Next() {
-		var i FlightSeat
+		var i GetFlightSeatsByFlightIDRow
 		if err := rows.Scan(
 			&i.FlightID,
 			&i.SeatNumber,
@@ -44,27 +52,20 @@ func (q *Queries) GetFlightSeatsByFlightID(ctx context.Context, flightID string)
 }
 
 const upsertFlightSeat = `-- name: UpsertFlightSeat :exec
-INSERT INTO flight_seats (flight_id, seat_number, price, passenger_id)
-VALUES ($1, $2, $3, $4)
+INSERT INTO flight_seats (flight_id, seat_number, price)
+VALUES ($1, $2, $3)
 ON CONFLICT (flight_id, seat_number)
 DO UPDATE SET
-    price = EXCLUDED.price,
-    passenger_id = EXCLUDED.passenger_id
+    price = EXCLUDED.price
 `
 
 type UpsertFlightSeatParams struct {
-	FlightID    string      `db:"flight_id" json:"flight_id"`
-	SeatNumber  string      `db:"seat_number" json:"seat_number"`
-	Price       float64     `db:"price" json:"price"`
-	PassengerID pgtype.Text `db:"passenger_id" json:"passenger_id"`
+	FlightID   string  `db:"flight_id" json:"flight_id"`
+	SeatNumber string  `db:"seat_number" json:"seat_number"`
+	Price      float64 `db:"price" json:"price"`
 }
 
 func (q *Queries) UpsertFlightSeat(ctx context.Context, arg UpsertFlightSeatParams) error {
-	_, err := q.db.Exec(ctx, upsertFlightSeat,
-		arg.FlightID,
-		arg.SeatNumber,
-		arg.Price,
-		arg.PassengerID,
-	)
+	_, err := q.db.Exec(ctx, upsertFlightSeat, arg.FlightID, arg.SeatNumber, arg.Price)
 	return err
 }

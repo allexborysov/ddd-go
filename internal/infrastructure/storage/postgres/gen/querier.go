@@ -11,7 +11,7 @@ import (
 type Querier interface {
 	GetAircraftByID(ctx context.Context, id string) (Aircraft, error)
 	GetFlightByID(ctx context.Context, id string) (Flight, error)
-	GetFlightSeatsByFlightID(ctx context.Context, flightID string) ([]FlightSeat, error)
+	GetFlightSeatsByFlightID(ctx context.Context, flightID string) ([]GetFlightSeatsByFlightIDRow, error)
 	GetTicketByID(ctx context.Context, id string) (Ticket, error)
 	UpsertAircraft(ctx context.Context, arg UpsertAircraftParams) error
 	UpsertFlight(ctx context.Context, arg UpsertFlightParams) error

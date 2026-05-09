@@ -32,6 +32,10 @@ func main() {
 	cfg := config.MustLoad()
 	logger := logger.New(cfg.Env)
 
+	if cfg.Env == "test" {
+		setupTestContainers(cfg)
+	}
+
 	redis := redis.MustConnectRedis(&redisv9.Options{
 		Addr:     cfg.Redis.Addr,
 		Password: cfg.Redis.Password,
@@ -42,12 +46,10 @@ func main() {
 	var (
 		aircrafts inventory.AircraftRepository
 		flights   flight.FlightRepository
-		tickets   flight.TicketRepository
 	)
 	if cfg.InMemoryStorage {
 		aircrafts = inmem.NewAircraftRepository()
 		flights = inmem.NewFlightRepository()
-		tickets = inmem.NewTicketRepository()
 	} else {
 		pool := postgres.MustConnectPostgres(fmt.Sprintf(
 			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -57,7 +59,6 @@ func main() {
 
 		aircrafts = pgrepos.NewAircraftRepository(pool)
 		flights = pgrepos.NewFlightRepository(pool)
-		tickets = pgrepos.NewTicketRepository(pool)
 	}
 
 	// Sync
@@ -65,7 +66,7 @@ func main() {
 
 	// Services
 	inventory := inventorysvc.New(aircrafts)
-	booking := bookingsvc.New(bookingSync, flights, tickets, ticketspdf.New())
+	booking := bookingsvc.New(bookingSync, flights, ticketspdf.New())
 	scheduling := schedulingsvc.New(flights, aircrafts)
 
 	// Interface
