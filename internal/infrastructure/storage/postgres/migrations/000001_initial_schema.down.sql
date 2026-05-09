@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS flight_seats;
+DROP TABLE IF EXISTS flights;
+DROP TABLE IF EXISTS aircrafts;

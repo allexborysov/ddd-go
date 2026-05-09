@@ -2,29 +2,19 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"log"
 
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
-	_ "github.com/jackc/pgx/v5/stdlib"
-
-	"github.com/allexborysov/aircraft/internal/infrastructure/storage/postgres/ent"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func MustConnectPostgres(connString string) *ent.Client {
-	db, err := sql.Open("pgx", connString)
+func MustConnectPostgres(connString string) *pgxpool.Pool {
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
-		log.Fatalf("Failed to open Postgres: %v", err)
+		log.Fatalf("Failed to connect to Postgres: %v", err)
 	}
-	if err := db.Ping(); err != nil {
+	if err := pool.Ping(context.Background()); err != nil {
 		log.Fatalf("Failed to ping Postgres: %v", err)
 	}
 
-	client := ent.NewClient(ent.Driver(entsql.OpenDB(dialect.Postgres, db)))
-	if err := client.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("Failed to apply Postgres schema: %v", err)
-	}
-
-	return client
+	return pool
 }

@@ -2,13 +2,13 @@ package ticketspdf
 
 import "github.com/allexborysov/aircraft/internal/domain/flight"
 
-type TicketsPDFPresetner struct {
+type TicketsPDFPresenter struct {
 }
 
-func New() *TicketsPDFPresetner {
-	return &TicketsPDFPresetner{}
+func New() *TicketsPDFPresenter {
+	return &TicketsPDFPresenter{}
 }
 
-func (p *TicketsPDFPresetner) GeneratePDF(ticket *flight.Ticket) (string, error) {
+func (p *TicketsPDFPresenter) GeneratePDF(ticket *flight.Ticket) (string, error) {
 	return "not_implemented", nil
 }

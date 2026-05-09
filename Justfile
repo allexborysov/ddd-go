@@ -7,19 +7,19 @@ default:
 
 # Run in watch mode
 run:
-    CONFIG_PATH={{config}} wgo run cmd/aircraft_api/main.go
+    CONFIG_PATH={{config}} wgo run cmd/api/main.go
 
 # Run in watch mode with -race
 run-race:
-    CONFIG_PATH={{config}} wgo run -race cmd/aircraft_api/main.go
+    CONFIG_PATH={{config}} wgo run -race cmd/api/main.go
 
 # Build
 build:
-    CONFIG_PATH={{config}} go build -o dist/aircraft_api cmd/aircraft_api/main.go
+    CONFIG_PATH={{config}} go build -o dist/api cmd/api/main.go
 
 # Start built binary
 start:
-    CONFIG_PATH={{config}} ./dist/aircraft_api
+    CONFIG_PATH={{config}} ./dist/api
 
 # Run all tests
 test:
@@ -38,8 +38,19 @@ fix:
     go fix ./...
 
 
-# --- Postgres Ent ---
+# --- Postgres sqlc ---
 
-# Generate ent code from schemas
-ent-gen:
-    go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert --target ./internal/infrastructure/storage/postgres/ent ./internal/infrastructure/storage/postgres/schema
+# Generate sqlc code from queries
+sqlc-gen:
+    sqlc generate -f internal/infrastructure/storage/postgres/sqlc.yaml
+
+# Run database migrations (requires DATABASE_URL env var or -database-url flag)
+# Commands:
+#   up              - apply all pending migrations (default)
+#   down            - rollback all migrations
+#   down steps=N    - rollback N migrations
+#   up   steps=N    - apply N migrations
+#   version         - print current migration version and dirty state
+#   force version=N - force-set version without running SQL (recover from dirty state)
+migrate command="version" steps="-1":
+    go run cmd/migrate/main.go -command={{command}} -steps={{steps}}

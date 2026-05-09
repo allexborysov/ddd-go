@@ -7,56 +7,40 @@ import (
 	shared "github.com/allexborysov/aircraft"
 	"github.com/allexborysov/aircraft/internal/domain/flight"
 	"github.com/allexborysov/aircraft/internal/domain/inventory"
-	"github.com/allexborysov/aircraft/internal/infrastructure/storage/postgres/ent"
-	ticketent "github.com/allexborysov/aircraft/internal/infrastructure/storage/postgres/ent/ticket"
+	db "github.com/allexborysov/aircraft/internal/infrastructure/storage/postgres/gen"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type ticketRepository struct {
-	client *ent.Client
+	queries *db.Queries
 }
 
-func NewTicketRepository(c *ent.Client) *ticketRepository {
-	return &ticketRepository{client: c}
+func NewTicketRepository(pool *pgxpool.Pool) *ticketRepository {
+	return &ticketRepository{queries: db.New(pool)}
 }
 
 func (r *ticketRepository) Store(ctx context.Context, t *flight.Ticket) error {
-	return r.client.Ticket.
-		Create().
-		SetID(string(t.ID)).
-		SetFlightID(string(t.FlightID)).
-		SetPassengerID(string(t.PassengerID)).
-		SetSeat(string(t.Seat)).
-		SetPrice(float64(t.Price)).
-		OnConflictColumns("id").
-		UpdateNewValues().
-		Exec(ctx)
+	return r.queries.UpsertTicket(ctx, db.UpsertTicketParams{
+		ID:          string(t.ID),
+		FlightID:    string(t.FlightID),
+		PassengerID: string(t.PassengerID),
+		Seat:        string(t.Seat),
+		Price:       float64(t.Price),
+	})
 }
 
 func (r *ticketRepository) Find(ctx context.Context, id string) (*flight.Ticket, error) {
-	row, err := r.client.Ticket.
-		Query().
-		Where(ticketent.IDEQ(id)).
-		WithFlight().
-		Only(ctx)
+	row, err := r.queries.GetTicketByID(ctx, id)
 	if err != nil {
-		if ent.IsNotFound(err) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return toDomainTicket(row)
-}
-
-func toDomainTicket(row *ent.Ticket) (*flight.Ticket, error) {
-	if row == nil {
-		return nil, errors.New("nil ticket row")
-	}
-	if row.Edges.Flight == nil {
-		return nil, errors.New("ticket flight edge not loaded")
-	}
 	return &flight.Ticket{
 		ID:          flight.TicketID(row.ID),
-		FlightID:    flight.FlightID(row.Edges.Flight.ID),
+		FlightID:    flight.FlightID(row.FlightID),
 		PassengerID: flight.PassengerID(row.PassengerID),
 		Seat:        inventory.SeatNumber(row.Seat),
 		Price:       shared.Amount(row.Price),
