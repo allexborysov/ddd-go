@@ -29,6 +29,17 @@ test:
 test-race:
     go test -v -race ./...
 
+# Format all Go code
+fmt:
+    go fmt ./...
+
 # Apply go fix
 fix:
     go fix ./...
+
+
+# --- Postgres Ent ---
+
+# Generate ent code from schemas
+ent-gen:
+    go run -mod=mod entgo.io/ent/cmd/ent generate --feature sql/upsert --target ./internal/infrastructure/storage/postgres/ent ./internal/infrastructure/storage/postgres/schema

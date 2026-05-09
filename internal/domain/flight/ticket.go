@@ -12,13 +12,13 @@ type TicketID string
 type Ticket struct {
 	ID          TicketID
 	FlightID    FlightID
-	PassengerID PassengerPassportID
+	PassengerID PassengerID
 
 	Seat  inventory.SeatNumber
 	Price shared.Amount
 }
 
-func NewTicket(flightID FlightID, passengerID PassengerPassportID, seatNumber inventory.SeatNumber, price shared.Amount) Ticket {
+func NewTicket(flightID FlightID, passengerID PassengerID, seatNumber inventory.SeatNumber, price shared.Amount) Ticket {
 	id := TicketID(uuid.New())
 	return Ticket{
 		ID:          id,

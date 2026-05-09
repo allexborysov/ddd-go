@@ -70,7 +70,7 @@ func NewSeats(seatNumbers []string) (Seats, error) {
 		return nil, errors.New("too many seats defined")
 	}
 	seen := make(map[string]struct{}, len(seatNumbers))
-	result := make(Seats, 0, len(seatNumbers))
+	seats := make(Seats, 0, len(seatNumbers))
 	for _, raw := range seatNumbers {
 		if _, ok := seen[raw]; ok {
 			return nil, fmt.Errorf("duplicate seat: %s", raw)
@@ -80,7 +80,7 @@ func NewSeats(seatNumbers []string) (Seats, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, seatNumber)
+		seats = append(seats, seatNumber)
 	}
-	return result, nil
+	return seats, nil
 }

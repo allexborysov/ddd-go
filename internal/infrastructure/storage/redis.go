@@ -1,4 +1,4 @@
-package redis
+package postgres
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	redisv9 "github.com/redis/go-redis/v9"
 )
 
-func MustConnect(options *redisv9.Options) *redisv9.Client {
+func MustConnectRedis(options *redisv9.Options) *redisv9.Client {
 	client := redisv9.NewClient(options)
 	ctx := context.Background()
 

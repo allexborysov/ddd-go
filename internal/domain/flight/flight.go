@@ -11,6 +11,7 @@ import (
 )
 
 type FlightID string
+type PassengerID string
 
 type Flight struct {
 	ID FlightID
@@ -26,10 +27,8 @@ type Flight struct {
 
 	CloseBookingBuffer time.Duration
 }
-
-type PassengerPassportID string
 type SeatAssignment struct {
-	PassengerID PassengerPassportID
+	PassengerID PassengerID
 	Price       shared.Amount
 }
 
@@ -43,23 +42,23 @@ var (
 	ErrBookingClosed = errors.New("Booking is closed")
 )
 
-func (f *Flight) AssignSeat(passengerId PassengerPassportID, seatNumber inventory.SeatNumber) (*Ticket, error) {
+func (f *Flight) AssignSeat(passengerId PassengerID, seatNumber inventory.SeatNumber) (*Ticket, error) {
 	untilDeparture := time.Until(f.ScheduledDeparture)
 	if untilDeparture < f.CloseBookingBuffer {
 		return nil, ErrBookingClosed
 	}
 
-	existingSeat := f.Seats[seatNumber]
-	if existingSeat.PassengerID != "" {
+	seat := f.Seats[seatNumber]
+	if seat.PassengerID != "" {
 		return nil, ErrSeatBooked
 	}
 
 	f.Seats[seatNumber] = SeatAssignment{
 		PassengerID: passengerId,
-		Price:       existingSeat.Price,
+		Price:       seat.Price,
 	}
 
-	ticket := NewTicket(f.ID, passengerId, seatNumber, existingSeat.Price)
+	ticket := NewTicket(f.ID, passengerId, seatNumber, seat.Price)
 
 	return &ticket, nil
 }

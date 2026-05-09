@@ -7,9 +7,9 @@ import (
 )
 
 type BookFlightRequest struct {
-	FlightID            string `json:"flight_id" validate:"required"`
-	SeatNumber          string `json:"seat_number" validate:"required"`
-	PassengerPassportID string `json:"passenger_passport_id" validate:"required"`
+	FlightID    string `json:"flight_id" validate:"required"`
+	SeatNumber  string `json:"seat_number" validate:"required"`
+	PassengerID string `json:"passenger_id" validate:"required"`
 }
 
 func (req *BookFlightRequest) Validate() error {
@@ -18,9 +18,9 @@ func (req *BookFlightRequest) Validate() error {
 
 func (req *BookFlightRequest) ToBookFlightCommand() *bookingsvc.BookFlightCommand {
 	return &bookingsvc.BookFlightCommand{
-		FlightID:            req.FlightID,
-		SeatNumber:          req.SeatNumber,
-		PassengerPassportID: req.PassengerPassportID,
+		FlightID:    req.FlightID,
+		SeatNumber:  req.SeatNumber,
+		PassengerID: req.PassengerID,
 	}
 }
 

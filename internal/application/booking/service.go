@@ -54,7 +54,7 @@ func (s *Service) BookFlight(ctx context.Context, command *BookFlightCommand) (*
 	}
 
 	ticket, err := fl.AssignSeat(
-		flight.PassengerPassportID(command.PassengerPassportID),
+		flight.PassengerID(command.PassengerID),
 		seatNumber,
 	)
 	if err != nil {

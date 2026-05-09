@@ -9,9 +9,11 @@ import (
 )
 
 type Config struct {
-	Env        string     `mapstructure:"env" validate:"required"`
-	HttpServer HttpServer `mapstructure:"http_server" validate:"required"`
-	Redis      Redis      `mapstructure:"redis" validate:"required"`
+	Env             string     `mapstructure:"env" validate:"required"`
+	InMemoryStorage bool       `mapstructure:"in_memory_storage"`
+	HttpServer      HttpServer `mapstructure:"http_server" validate:"required"`
+	Redis           Redis      `mapstructure:"redis" validate:"required"`
+	Postgres        Postgres   `mapstructure:"postgres" validate:"required"`
 }
 
 type HttpServer struct {
@@ -22,6 +24,14 @@ type Redis struct {
 	Addr     string `mapstructure:"addr" validate:"required"`
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
+}
+
+type Postgres struct {
+	Host     string `mapstructure:"host" validate:"required"`
+	Port     int    `mapstructure:"port" validate:"required"`
+	User     string `mapstructure:"user" validate:"required"`
+	Password string `mapstructure:"password" validate:"required"`
+	DBName   string `mapstructure:"dbname" validate:"required"`
 }
 
 func MustLoad() *Config {

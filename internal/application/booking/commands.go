@@ -5,9 +5,9 @@ import (
 )
 
 type BookFlightCommand struct {
-	FlightID            string
-	SeatNumber          string
-	PassengerPassportID string
+	FlightID    string
+	SeatNumber  string
+	PassengerID string
 }
 
 type BookFlightCommandResult struct {

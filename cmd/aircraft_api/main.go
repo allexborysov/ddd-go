@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
 
@@ -10,9 +11,13 @@ import (
 	bookingsvc "github.com/allexborysov/aircraft/internal/application/booking"
 	inventorysvc "github.com/allexborysov/aircraft/internal/application/inventory"
 	schedulingsvc "github.com/allexborysov/aircraft/internal/application/scheduling"
+	"github.com/allexborysov/aircraft/internal/domain/flight"
+	"github.com/allexborysov/aircraft/internal/domain/inventory"
 	"github.com/allexborysov/aircraft/internal/infrastructure/logger"
 	"github.com/allexborysov/aircraft/internal/infrastructure/repos/inmem"
+	pgrepos "github.com/allexborysov/aircraft/internal/infrastructure/repos/postgres"
 	redis "github.com/allexborysov/aircraft/internal/infrastructure/storage"
+	"github.com/allexborysov/aircraft/internal/infrastructure/storage/postgres"
 	bookingsync "github.com/allexborysov/aircraft/internal/infrastructure/sync"
 
 	"github.com/allexborysov/aircraft/internal/infrastructure/services/ticketspdf"
@@ -27,22 +32,43 @@ func main() {
 	cfg := config.MustLoad()
 	logger := logger.New(cfg.Env)
 
-	redis := redis.MustConnect(&redisv9.Options{
+	redis := redis.MustConnectRedis(&redisv9.Options{
 		Addr:     cfg.Redis.Addr,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
 
-	aircrafts := inmem.NewAircraftRepository()
-	flights := inmem.NewFlightRepository()
-	tickets := inmem.NewTicketRepository()
+	// Repositories
+	var (
+		aircrafts inventory.AircraftRepository
+		flights   flight.FlightRepository
+		tickets   flight.TicketRepository
+	)
+	if cfg.InMemoryStorage {
+		aircrafts = inmem.NewAircraftRepository()
+		flights = inmem.NewFlightRepository()
+		tickets = inmem.NewTicketRepository()
+	} else {
+		pg := postgres.MustConnectPostgres(fmt.Sprintf(
+			"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.DBName,
+		))
+		defer pg.Close()
 
+		aircrafts = pgrepos.NewAircraftRepository(pg)
+		flights = pgrepos.NewFlightRepository(pg)
+		tickets = pgrepos.NewTicketRepository(pg)
+	}
+
+	// Sync
 	bookingSync := bookingsync.New(redis)
 
+	// Services
 	inventory := inventorysvc.New(aircrafts)
 	booking := bookingsvc.New(bookingSync, flights, tickets, ticketspdf.New())
 	scheduling := schedulingsvc.New(flights, aircrafts)
 
+	// Interface
 	e := echo.New()
 	e.Use(middleware.Recover())
 
